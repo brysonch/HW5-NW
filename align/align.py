@@ -128,11 +128,21 @@ class NeedlemanWunsch:
         
         # TODO: Initialize matrix private attributes for use in alignment
         # create matrices for alignment scores, gaps, and backtracing
-        pass
-
+        
+        lenA = len(seqA) + 1
+        lenB = len(seqB) + 1
+        self._align_matrix = np.zeros((lenA, lenB))
+        self._gapA_matrix = np.zeros((lenA, lenB))
+        self._gapB_matrix = np.zeros((lenA, lenB))
         
         # TODO: Implement global alignment here
-        pass      		
+
+        for idx in lenA:
+
+        for i, base in enumerate(seqA):
+            for j, base in enumerate(seqB):
+                self._align_matrix[i][j] = 
+
         		    
         return self._backtrace()
 
