@@ -137,11 +137,23 @@ class NeedlemanWunsch:
         
         # TODO: Implement global alignment here
 
-        for idx in lenA:
+        self._align_matrix[0,1] = gap_open
+        self._align_matrix[1,0] = gap_open
+        self._gapA_matrix[0,1] = 1
+        self._gapB_matrix[1,0] = 1
+
+        for idx in range(2, lenA):
+            self._align_matrix[0,idx] = self._align_matrix[0,idx-1] + self.gap_extend
+            self._gapA_matrix[0,idx] = self._gapA_matrix[0,idx-1] + 1
+
+        for idx in range(2, lenB):
+            self._align_matrix[idx,0] = self._align_matrix[idx-1,0] + self.gap_extend
+            self._gapB_matrix[idx,0] = self._gapB_matrix[idx-1,0] + 1
+
 
         for i, base in enumerate(seqA):
             for j, base in enumerate(seqB):
-                self._align_matrix[i][j] = 
+                self._align_matrix[i,j] = 
 
         		    
         return self._backtrace()
