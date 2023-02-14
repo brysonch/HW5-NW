@@ -137,8 +137,8 @@ class NeedlemanWunsch:
         
         # TODO: Implement global alignment here
 
-        self._align_matrix[1,0] = gap_open
-        self._align_matrix[0,1] = gap_open
+        self._align_matrix[1,0] = self.gap_open + self.gap_extend
+        self._align_matrix[0,1] = self.gap_open + self.gap_extend
         self._gapA_matrix[1,0] = 1
         self._gapB_matrix[0,1] = 1
 
@@ -155,8 +155,8 @@ class NeedlemanWunsch:
             for j, baseB in enumerate(seqB, start=1):
                 match = self._align_matrix[i-1,j-1] + self.sub_dict[(baseA,baseB)]
 
-                prev_numgapA = _gapA_matrix[i,j-1]
-                prev_numgapB = _gapB_matrix[i-1,j]
+                prev_numgapA = self._gapA_matrix[i,j-1]
+                prev_numgapB = self._gapB_matrix[i-1,j]
 
                 if prev_numgapA > 0:
                     gapA = self._align_matrix[i,j-1] + self.gap_extend
@@ -168,19 +168,26 @@ class NeedlemanWunsch:
                 else:
                     gapB = self._align_matrix[i-1,j] + self.gap_open
 
+                max_ids = [index for index, m in enumerate((match, gapA, gapB)) if m == max((match, gapA, gapB))]
                 # Add to gap matrix for extension/open
-                if np.argmax((diag, gapA, gapB)) == 1: 
-                    self._gapA_matrix[i][j] = self._gapA_matrix[i,j-1] + 1
+                if (max_ids[0] == 0 and len(max_ids) > 1) or max_ids[0] == 1: 
+                    self._gapA_matrix[i][j] = prev_numgapA + 1
                     self._gapB_matrix[i][j] = 0
-                elif np.argmax((diag, gapA, gapB)) == 2: 
-                    self._gapB_matrix[i][j] = self._gapB_matrix[i-1,j] + 1
+                    if max_ids[0] == 0 and len(max_ids) > 1:
+                        true_max = max_ids[1]
+                    else: 
+                        true_max = max_ids[0]
+                elif max_ids[0] == 2: 
+                    self._gapB_matrix[i][j] = prev_numgapB + 1
                     self._gapA_matrix[i][j] = 0
+                    true_max = max_ids[0]
                 else:
                     self._gapA_matrix[i][j] = 0
                     self._gapB_matrix[i][j] = 0
+                    true_max = max_ids[0]
 
-                self._align_matrix[i,j] = max(match, gapA, gapB)
-        		    
+                self._align_matrix[i,j] = (match, gapA, gapB)[true_max]
+        print("matrix: ", np.transpose(self._align_matrix))
         return self._backtrace()
 
     def _backtrace(self) -> Tuple[float, str, str]:
@@ -198,8 +205,8 @@ class NeedlemanWunsch:
          		the score and corresponding strings for the alignment of seqA and seqB
         """
         
-        i = self.lenA
-        j = self.lenB
+        i = self.lenA - 1
+        j = self.lenB - 1
         #self.seqA_align += self._seqA[i]
         #self.seqB_align += self._seqB[j]
         self.alignment_score += self._align_matrix[i,j]
