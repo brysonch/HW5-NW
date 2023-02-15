@@ -42,7 +42,7 @@ def test_nw_alignment():
         [ni, -7, -7, -16], 
         [ni, -8, -8, -6]]) 
 
-    assert (nws1s2._align_matrix.all == align_check).all()
+    assert (nws1s2._align_matrix == align_check).all()
     assert (nws1s2._gapA_matrix == gapA_check).all()
     assert (nws1s2._gapB_matrix == gapB_check).all()
 
