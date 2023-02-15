@@ -130,6 +130,7 @@ class NeedlemanWunsch:
         # TODO: Initialize matrix private attributes for use in alignment
         # create matrices for alignment scores, gaps, and backtracing
         
+        # Initialize all the neg inf, alignment/gap matrices of size lenA +1 and lenB + 1 for gap
         self.lenA = len(seqA) + 1
         self.lenB = len(seqB) + 1
         self._align_matrix = np.ones((self.lenA, self.lenB)) * -np.inf
@@ -138,6 +139,7 @@ class NeedlemanWunsch:
         
         # TODO: Implement global alignment here
 
+        # Fill out the gap scores in the gapA and gapB matrices along the first row and column
         self._align_matrix[0][0] = 0
         for idx in range(0, self.lenA):
             self._gapA_matrix[idx,0] = self.gap_open + (self.gap_extend * idx)
@@ -149,17 +151,20 @@ class NeedlemanWunsch:
         for i, baseA in enumerate(seqA, start=1):
             for j, baseB in enumerate(seqB, start=1):
 
+                # Find the score from align matrix, gapA matrix, and gapB matrix if there is a base alignment for both seqs
                 match_score = self.sub_dict[(baseA,baseB)]
                 match = self._align_matrix[i-1,j-1]
                 matchgapA = self._gapA_matrix[i-1,j-1]
                 matchgapB = self._gapB_matrix[i-1,j-1]
                 self._align_matrix[i,j] = match_score + max(match, matchgapA, matchgapB)
 
+                # Find the score from align matrix, gapA matrix, and gapB matrix if there is a gap for seqA (horizontal)
                 gapAmatch = self._align_matrix[i,j-1] + self.gap_open + self.gap_extend
                 gapAextend = self._gapA_matrix[i,j-1] + self.gap_extend
                 gapAgapB = self._gapB_matrix[i,j-1] + self.gap_open + self.gap_extend
                 self._gapA_matrix[i,j] = max(gapAmatch, gapAextend, gapAgapB)
 
+                # Find the score from align matrix, gapA matrix, and gapB matrix if there is a gap for seqB (vertical)
                 gapBmatch = self._align_matrix[i-1,j] + self.gap_open + self.gap_extend
                 gapBextend = self._gapB_matrix[i-1,j] + self.gap_extend
                 gapBgapA = self._gapA_matrix[i-1,j] + self.gap_open + self.gap_extend
@@ -185,6 +190,7 @@ class NeedlemanWunsch:
         i = len(self._seqA)
         j = len(self._seqB)
 
+        # Alignment score is the score of the ith, jth index of the matrix
         self.alignment_score += max(self._align_matrix[i,j], self._gapA_matrix[i,j], self._gapB_matrix[i,j])
 
         while i > 0 or j > 0:
@@ -192,6 +198,7 @@ class NeedlemanWunsch:
             gapA = self._gapA_matrix[i,j]
             gapB = self._gapB_matrix[i,j]
 
+            # Check which direction to follow the backtrace (match, gapA, gapB)
             if np.argmax((diag, gapA, gapB)) == 0:
                 self.seqA_align = self._seqA[i-1] + self.seqA_align
                 self.seqB_align = self._seqB[j-1] + self.seqB_align

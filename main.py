@@ -27,22 +27,13 @@ def main():
             [hb_score, "Balaeniceps rex"],
             [ht_score, "Tursiops truncatus"]]
     sorted_scores = sorted(scores, key=lambda x: (-x[0]))
-
-    print("Order of species most similar to least similar aligned with humans: \n")
-    for i in sorted_scores:  
-        print(i[0], " (score: ", i[1],")\n")
     
     # TODO print all of the alignment score between each species BRD2 and human BRD2
     # using gap opening penalty of -10 and a gap extension penalty of -1 and BLOSUM62 matrix
     
-    seq1, _ = read_fasta("./data/test_seq1.fa")
-    seq2, _ = read_fasta("./data/test_seq2.fa")
-    
-    nws1s2 = NeedlemanWunsch(sub_matrix_file="./substitution_matrices/BLOSUM62.mat", gap_open=-10, gap_extend=-1)
-    score, seq1_align, seq2_align = nws1s2.align(seq1, seq2)
-    print("score: ", score, "\n")
-    print("seq1: ", seq1_align, "\n")
-    print("seq2: ", seq2_align, "\n")
+    print("Order of species most similar to least similar aligned with humans: \n")
+    for i in sorted_scores:  
+        print(i[0], " (score: ", i[1],")\n")
     
     
 
