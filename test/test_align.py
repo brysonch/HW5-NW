@@ -25,7 +25,7 @@ def test_nw_alignment():
     ni = -np.inf
 
     align_check = np.array([[0, ni, ni, ni],
-        [ni, 5,  -11, -13],
+        [ni, 5, -11, -13],
         [ni, -12, 4, -8],
         [ni, -12, -1, 5],
         [ni, -14, -6, 4]]) 
@@ -38,14 +38,14 @@ def test_nw_alignment():
 
     gapB_check = np.array([[-10, -11, -12, -13], 
         [ni, -12, -13, -14], 
-        [ni,  -6, -14, -15], 
-        [ni,  -7,  -7, -16], 
-        [ni,  -8,  -8,  -6]]) 
+        [ni, -6, -14, -15], 
+        [ni, -7, -7, -16], 
+        [ni, -8, -8, -6]]) 
 
     assert (nws1s2._align_matrix.all == align_check).all()
     assert (nws1s2._gapA_matrix == gapA_check).all()
     assert (nws1s2._gapB_matrix == gapB_check).all()
-    
+
 
 def test_nw_backtrace():
     """

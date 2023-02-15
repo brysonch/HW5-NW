@@ -165,9 +165,6 @@ class NeedlemanWunsch:
                 gapBgapA = self._gapA_matrix[i-1,j] + self.gap_open + self.gap_extend
                 self._gapB_matrix[i,j] = max(gapBmatch, gapBextend, gapBgapA)
 
-        print("alignment: ", self._align_matrix, "\n")
-        print("gapA: ", self._gapA_matrix, "\n")
-        print("gapB: ", self._gapB_matrix, "\n")
         return self._backtrace()
 
     def _backtrace(self) -> Tuple[float, str, str]:
