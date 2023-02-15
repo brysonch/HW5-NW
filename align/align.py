@@ -98,6 +98,7 @@ class NeedlemanWunsch:
                     break
         return dict_sub
 
+
     def align(self, seqA: str, seqB: str) -> Tuple[float, str, str]:
         """
         TODO
@@ -131,63 +132,42 @@ class NeedlemanWunsch:
         
         self.lenA = len(seqA) + 1
         self.lenB = len(seqB) + 1
-        self._align_matrix = np.zeros((self.lenA, self.lenB))
-        self._gapA_matrix = np.zeros(self._align_matrix.shape)
-        self._gapB_matrix = np.zeros(self._align_matrix.shape)
+        self._align_matrix = np.ones((self.lenA, self.lenB)) * -np.inf
+        self._gapA_matrix = np.ones(self._align_matrix.shape) * -np.inf
+        self._gapB_matrix = np.ones(self._align_matrix.shape) * -np.inf
         
         # TODO: Implement global alignment here
 
-        self._align_matrix[1,0] = self.gap_open + self.gap_extend
-        self._align_matrix[0,1] = self.gap_open + self.gap_extend
-        self._gapA_matrix[1,0] = 1
-        self._gapB_matrix[0,1] = 1
+        self._align_matrix[0][0] = 0
+        for idx in range(0, self.lenA):
+            self._gapA_matrix[idx,0] = self.gap_open + (self.gap_extend * idx)
 
-        for idx in range(2, self.lenA):
-            self._align_matrix[idx,0] = self._align_matrix[idx-1,0] + self.gap_extend
-            self._gapA_matrix[idx,0] = self._gapA_matrix[idx-1,0] + 1
-
-        for idx in range(2, self.lenB):
-            self._align_matrix[0,idx] = self._align_matrix[0,idx-1] + self.gap_extend
-            self._gapB_matrix[0,idx] = self._gapB_matrix[0,idx-1] + 1
+        for idx in range(0, self.lenB):
+            self._gapB_matrix[0,idx] = self.gap_open + (self.gap_extend * idx)
 
 
         for i, baseA in enumerate(seqA, start=1):
             for j, baseB in enumerate(seqB, start=1):
-                match = self._align_matrix[i-1,j-1] + self.sub_dict[(baseA,baseB)]
 
-                prev_numgapA = self._gapA_matrix[i,j-1]
-                prev_numgapB = self._gapB_matrix[i-1,j]
+                match_score = self.sub_dict[(baseA,baseB)]
+                match = self._align_matrix[i-1,j-1]
+                matchgapA = self._gapA_matrix[i-1,j-1]
+                matchgapB = self._gapB_matrix[i-1,j-1]
+                self._align_matrix[i,j] = match_score + max(match, matchgapA, matchgapB)
 
-                if prev_numgapA > 0:
-                    gapA = self._align_matrix[i,j-1] + self.gap_extend
-                else:
-                    gapA = self._align_matrix[i,j-1] + self.gap_open
+                gapAmatch = self._align_matrix[i,j-1] + self.gap_open + self.gap_extend
+                gapAextend = self._gapA_matrix[i,j-1] + self.gap_extend
+                gapAgapB = self._gapB_matrix[i,j-1] + self.gap_open + self.gap_extend
+                self._gapA_matrix[i,j] = max(gapAmatch, gapAextend, gapAgapB)
 
-                if prev_numgapB > 0:
-                    gapB = self._align_matrix[i-1,j] + self.gap_extend
-                else:
-                    gapB = self._align_matrix[i-1,j] + self.gap_open
+                gapBmatch = self._align_matrix[i-1,j] + self.gap_open + self.gap_extend
+                gapBextend = self._gapB_matrix[i-1,j] + self.gap_extend
+                gapBgapA = self._gapA_matrix[i-1,j] + self.gap_open + self.gap_extend
+                self._gapB_matrix[i,j] = max(gapBmatch, gapBextend, gapBgapA)
 
-                max_ids = [index for index, m in enumerate((match, gapA, gapB)) if m == max((match, gapA, gapB))]
-                # Add to gap matrix for extension/open
-                if (max_ids[0] == 0 and len(max_ids) > 1) or max_ids[0] == 1: 
-                    self._gapA_matrix[i][j] = prev_numgapA + 1
-                    self._gapB_matrix[i][j] = 0
-                    if max_ids[0] == 0 and len(max_ids) > 1:
-                        true_max = max_ids[1]
-                    else: 
-                        true_max = max_ids[0]
-                elif max_ids[0] == 2: 
-                    self._gapB_matrix[i][j] = prev_numgapB + 1
-                    self._gapA_matrix[i][j] = 0
-                    true_max = max_ids[0]
-                else:
-                    self._gapA_matrix[i][j] = 0
-                    self._gapB_matrix[i][j] = 0
-                    true_max = max_ids[0]
-
-                self._align_matrix[i,j] = (match, gapA, gapB)[true_max]
-        print("matrix: ", np.transpose(self._align_matrix))
+        print("alignment: ", self._align_matrix, "\n")
+        print("gapA: ", self._gapA_matrix, "\n")
+        print("gapB: ", self._gapB_matrix, "\n")
         return self._backtrace()
 
     def _backtrace(self) -> Tuple[float, str, str]:
@@ -205,32 +185,28 @@ class NeedlemanWunsch:
          		the score and corresponding strings for the alignment of seqA and seqB
         """
         
-        i = self.lenA - 1
-        j = self.lenB - 1
-        #self.seqA_align += self._seqA[i]
-        #self.seqB_align += self._seqB[j]
-        self.alignment_score += self._align_matrix[i,j]
+        i = len(self._seqA)
+        j = len(self._seqB)
+
+        self.alignment_score += max(self._align_matrix[i,j], self._gapA_matrix[i,j], self._gapB_matrix[i,j])
 
         while i > 0 or j > 0:
-            diag = self._align_matrix[i-1,j-1]
-            gapA = self._align_matrix[i,j-1]
-            gapB = self._align_matrix[i-1,j]
+            diag = self._align_matrix[i,j]
+            gapA = self._gapA_matrix[i,j]
+            gapB = self._gapB_matrix[i,j]
 
             if np.argmax((diag, gapA, gapB)) == 0:
                 self.seqA_align = self._seqA[i-1] + self.seqA_align
                 self.seqB_align = self._seqB[j-1] + self.seqB_align
-                self.alignment_score += diag
                 i -= 1
                 j -= 1
             elif np.argmax((diag, gapA, gapB)) == 1:
                 self.seqA_align = "-" + self.seqA_align
                 self.seqB_align = self._seqB[j-1] + self.seqB_align
-                self.alignment_score += gapA
                 j -= 1
             else:
                 self.seqA_align = self._seqA[i-1] + self.seqA_align
                 self.seqB_align = "-" + self.seqB_align
-                self.alignment_score += gapB
                 i -= 1
 
         return (self.alignment_score, self.seqA_align, self.seqB_align)
